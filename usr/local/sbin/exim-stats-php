@@ -1,0 +1,64 @@
+#!/usr/bin/php
+<?php
+
+$dbh = new PDO('sqlite:/var/lib/exim-stats-php/db.sqlite');
+$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$dbh->exec('CREATE TABLE IF NOT EXISTS events(
+	timestamp DATETIME,
+	event TEXT,
+	counter INTERGER,
+	UNIQUE(timestamp, event) ON CONFLICT REPLACE);
+    CREATE INDEX IF NOT EXISTS timestamp_index ON events(timestamp);');
+
+$sql = 'INSERT OR REPLACE INTO events (timestamp, event, counter)
+  VALUES (?, 
+          ?,
+          COALESCE((SELECT counter FROM events WHERE timestamp = ? AND event = ?) + 1, 1)
+         );';
+
+$sth = $dbh->prepare($sql);
+$dbh->beginTransaction();
+
+function add_event($datetime, $event) {
+    global $sth;
+    try {
+    $sth->execute(array(
+        $datetime,
+        $event,
+        $datetime,
+        $event
+    ));
+    }
+    catch (PDOException $e)
+    {
+        echo $e->getMessage();
+        die();
+    }
+}
+
+$f = fopen('php://stdin', 'r');
+while($line = fgets($f)) {
+    $pattern = '/^\d+-\d+-\d+ \d+:\d+/';
+    if (!preg_match($pattern, $line, $matches)) {
+        continue;
+    }
+    $datetime = $matches[0];
+    if (preg_match('/DATA: greylisted/', $line)) {
+        add_event($datetime, 'greylistdefer');
+    } elseif (preg_match('/rejected RCPT/', $line)) {
+        add_event($datetime, 'rcptrejec');
+    } elseif (preg_match('/<=/', $line)) {
+        add_event($datetime, 'in');
+    } elseif (preg_match('/[=-]>/', $line)) {
+        add_event($datetime, 'out');
+    } elseif (preg_match('/Warning: spam tagged/', $line)) {
+        add_event($datetime, 'spamtag');
+    } elseif (preg_match('/DATA: spam rejected/', $line)) {
+        add_event($datetime, 'spamrejec');
+    } elseif (preg_match('/DATA: Malware/', $line)) {
+        add_event($datetime, 'malware');
+    }
+}
+
+fclose($f);
+$dbh->commit();

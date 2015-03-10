@@ -1,0 +1,1 @@
+* * * * * Debian-exim [ -x /usr/sbin/logtail2 ] && [ -x /usr/local/sbin/exim-stats-php ] && /usr/sbin/logtail2 -f /var/log/exim4/mainlog -o /var/lib/exim-stats-php/log.offset | /usr/local/sbin/exim-stats-php

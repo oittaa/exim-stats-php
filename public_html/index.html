@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8">
+  <title>Email Statistics</title>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+    <script type="text/javascript">
+    
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.setOnLoadCallback(function() {drawChart('day')} );
+      
+    function drawChart(x) {
+      var options = {
+          isStacked: true,
+          title: 'Email Statistics',
+          hAxis: {title: 'Date',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 0},
+          focusTarget: 'category'
+          };
+
+      var jsonData = $.ajax({
+          url: "getData.php?q="+x,
+          dataType:"json",
+          async: false
+          }).responseText;
+          
+      // Create our data table out of JSON data loaded from server.
+      var data = new google.visualization.DataTable(jsonData);
+
+      // Instantiate and draw our chart, passing in some options.
+      var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+
+    </script>
+  </head>
+
+  <body>
+
+    <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1.1','packages':['corechart']}]}"></script>
+       <div id="chart_div" style="width: 100%; height: 600px;"></div>
+ <button onclick="drawChart('hour')">Hour</button>
+ <button onclick="drawChart('day')">Day</button>
+ <button onclick="drawChart('week')">Week</button>
+ <button onclick="drawChart('month')">Month</button>
+ <button onclick="drawChart('year')">Year</button>
+  </body>
+</html>
