@@ -75,19 +75,20 @@ foreach ($s as $v) {
 }
 
 
-//$timestamp = date("Y-m-d H:i", strtotime($startpoint));
 $timestamp = date($phptimestr, strtotime($startpoint));
-$sql = "SELECT strftime('".$sqltimestr."',timestamp) AS timestamp, event, sum(counter) AS counter FROM events WHERE timestamp >= ? ";
-$sql .= "GROUP BY strftime('".$sqltimestr."',timestamp), event ORDER BY timestamp ASC";
-//$sql = "SELECT timestamp, event, counter FROM events WHERE timestamp >= ? ORDER BY timestamp ASC";
+$sql = "SELECT strftime(?, timestamp) AS timestamp, event, sum(counter) AS counter";
+$sql .= " FROM events WHERE timestamp >= ?";
+$sql .= " GROUP BY strftime(?, timestamp), event";
+$sql .= " ORDER BY timestamp ASC";
 $sth = $dbh->prepare($sql);
-$sth->execute(array($timestamp));
-
+$sth->execute(array($sqltimestr, $timestamp, $sqltimestr));
 $result = $sth->fetch(PDO::FETCH_ASSOC);
 
 for ($i = 0; $i < $num_steps; $i++) {
   $month = (int)date("m", strtotime($timestamp)) - 1; // Javascript months start from zero
-  $datestr = "Date(".date("Y,", strtotime($timestamp)).str_pad($month, 2, '0', STR_PAD_LEFT).date(",d,H,i,s", strtotime($timestamp)).")";
+  $datestr = "Date(".date("Y,", strtotime($timestamp));
+  $datestr .= str_pad($month, 2, '0', STR_PAD_LEFT);
+  $datestr .= date(",d,H,i,s", strtotime($timestamp)).")";
   $row[0]["v"] = $datestr;
   $row[0]["f"] = date($jtimestr, strtotime($timestamp));
   $j = 1;
@@ -96,7 +97,6 @@ for ($i = 0; $i < $num_steps; $i++) {
     $row[$j]["f"] = null;
     $j++;
   }
-//  while ($result && date("Y-m-d H:i", strtotime($result["timestamp"])) == $timestamp) {
   while ($result && $result["timestamp"] == $timestamp) {
     $j = 1;
     foreach ($s as $v) {
@@ -111,5 +111,5 @@ for ($i = 0; $i < $num_steps; $i++) {
   $timestamp = date("Y-m-d H:i", strtotime("$timestamp $step"));
 }
 $data=array("cols"=>$cols,"rows"=>$rows);
+header('Content-Type: application/json');
 echo json_encode($data);
-//echo json_encode($data,JSON_PRETTY_PRINT);
