@@ -50,13 +50,13 @@ switch ($q) {
 
 
 $s = array();
+array_push($s,array("spamtag","Tagged Spam"));
 array_push($s,array("greylistdefer","Greylisted"));
-array_push($s,array("rcptrejec","Rejected RCPT"));
+array_push($s,array("out","Delivered mail"));
 array_push($s,array("in","Received mail"));
-array_push($s,array("out","Sent mail"));
-array_push($s,array("spamtag","Tagged spam"));
-array_push($s,array("spamrejec","Rejected spam"));
-array_push($s,array("malware","Malware"));
+array_push($s,array("rcptrejec","Rejected RCPT"));
+array_push($s,array("spamrejec","Rejected Spam"));
+array_push($s,array("malware","Rejected Malware"));
 
 $cols = array();
 $rows = array();
