@@ -72,12 +72,15 @@ $col["type"]="datetime";
 array_push($cols,$col);
 array_push($emptyrow, array("v"=>0,"f"=>null));
 
-// Initialize columns and rows for every event type
+// Initialize columns and rows for every event type. Add event index search.
+$i = 1;
+$idx = array();
 foreach ($events as $v) {
     $col["label"]=$v[1];
     $col["type"]="number";
     array_push($cols,$col);
     array_push($emptyrow, array("v"=>0,"f"=>null));
+    $idx[$v[0]] = $i++;
 }
 
 
@@ -99,13 +102,8 @@ for ($i = 0; $i < $num_steps; $i++) {
   $row[0]["v"] = $datestr;
   $row[0]["f"] = date($jtimestr, strtotime($timestamp));
   while ($result && $result["timestamp"] == $timestamp) {
-    $j = 1;
-    foreach ($events as $v) {
-      if ($result["event"] == $v[0]) {
-        $row[$j]["v"] = (int)$result["counter"];
-        break;
-      }
-      $j++;
+    if (isset($idx[$result["event"]])) {
+      $row[$idx[$result["event"]]]["v"] = (int)$result["counter"];
     }
     $result = $sth->fetch(PDO::FETCH_ASSOC);
   }
