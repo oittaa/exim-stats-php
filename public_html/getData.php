@@ -1,4 +1,6 @@
 <?php
+// Compress output if possible
+ob_start("ob_gzhandler");
 
 $dbh = new PDO('sqlite:/var/lib/exim-stats-php/db.sqlite');
 $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -48,6 +50,11 @@ switch ($q) {
         $jtimestr = "Y-m-d H:i";
 }
 
+header('Content-Type: application/json');
+if (function_exists('apc_fetch') && $data = apc_fetch($startpoint)) {
+  echo $data;
+  exit();
+}
 
 $events = array();
 array_push($events,array("spamtag","Tagged Spam"));
@@ -110,6 +117,9 @@ for ($i = 0; $i < $num_steps; $i++) {
   array_push($rows,array("c"=>$row));
   $timestamp = date("Y-m-d H:i", strtotime("$timestamp $step"));
 }
-$data=array("cols"=>$cols,"rows"=>$rows);
-header('Content-Type: application/json');
-echo json_encode($data);
+$data=json_encode(array("cols"=>$cols,"rows"=>$rows));
+if (function_exists('apc_add')) {
+  // Fresh data becomes available every minute
+  apc_add($startpoint, $data, 60 - date('s'));
+}
+echo $data;
