@@ -10,11 +10,12 @@
     <script type="text/javascript">
     
     // Set a callback to run when the Google Visualization API is loaded.
-    google.setOnLoadCallback(function() {drawChart('day')} );
+    google.setOnLoadCallback(function() {drawChart(location.hash.substring(1) || 'day')} );
       
     var tId;
     function drawChart(x) {
       var options = {
+          location.hash=x;
           isStacked: true,
           title: 'Email Statistics',
           hAxis: {title: 'Date',  titleTextStyle: {color: '#333'}},
